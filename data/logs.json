@@ -1,0 +1,20 @@
+[
+  {
+    "date": "2025.12.31",
+    "title": "GeZ_V1.2.1.5（图文创作能力）",
+    "importantItems": [
+      "1、科普图文需求文档：\n https://ai.feishu.cn/wiki/VKyywPlM9iU7BBktecTcmHbWn8j?from=from_copylink \n2、科普图文UI：\n https://www.figma.com/design/4sd7Byenqqa4GrnyNLXJzV/unimind?node-id=0-1&t=alAU7oTrNtf2QXfP-1 \n3、20251215需求范围调整说明：\n（1）完成图文即兴创作编辑、发布、排版能力\n（2）完成图文上传原文提取、发布、排版能力\n（3）暂缓图文素材整合、排版、发布能力\n（4）新增：完成科普征集任务系统与图文创作打通能力\n（5）暂缓密码登录能力\n\n"
+    ],
+    "dailyItems": [],
+    "attachments": [
+      {
+        "name": "BCATCR202511240001502.mp4",
+        "size": 9860828,
+        "type": "video/mp4",
+        "isLocalFile": true,
+        "downloadedAt": "2025-12-26T10:00:02.397Z"
+      }
+    ],
+    "timestamp": 1767139200000
+  }
+]
