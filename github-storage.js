@@ -86,9 +86,10 @@ class GitHubStorage {
 
             const data = await response.json();
 
-            // GitHub API 返回的内容是 Base64 编码的
-            const content = atob(data.content);
-            const logs = JSON.parse(content);
+            // GitHub API 返回的内容是 Base64 编码的，需要正确处理中文
+            const base64Content = data.content.replace(/\s/g, ''); // 移除空白字符
+            const decodedContent = decodeURIComponent(escape(atob(base64Content)));
+            const logs = JSON.parse(decodedContent);
 
             // 同时保存到本地作为缓存
             this.saveLogsToLocal(logs);
