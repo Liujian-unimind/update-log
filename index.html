@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>更新日志系统 - 首页</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 60px 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 50px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 20px;
+            flex-direction: column;
+            margin-bottom: 40px;
+        }
+
+        .btn {
+            padding: 20px 40px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: #ff8800;
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 136, 0, 0.3);
+        }
+
+        .btn-primary:hover {
+            background-color: #ff9922;
+            box-shadow: 0 6px 20px rgba(255, 136, 0, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: #4CAF50;
+            color: white;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background-color: #5bc05e;
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .icon {
+            font-size: 24px;
+        }
+
+        .features {
+            background-color: #f9f9f9;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .features h3 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .feature-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            text-align: left;
+        }
+
+        .feature-item {
+            color: #666;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feature-item::before {
+            content: "✓";
+            color: #4CAF50;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .footer {
+            margin-top: 30px;
+            color: #999;
+            font-size: 12px;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 40px 25px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            .feature-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">📝</div>
+        <h1>更新日志系统</h1>
+        <p class="subtitle">简洁高效的团队更新记录管理工具</p>
+
+        <div class="buttons">
+            <a href="config.html" class="btn" style="background-color: #9C27B0;">
+                <span class="icon">⚙️</span>
+                <span>GitHub 配置</span>
+            </a>
+            <a href="update-log.html" class="btn btn-primary">
+                <span class="icon">✏️</span>
+                <span>管理页面</span>
+            </a>
+            <a href="view.html" class="btn btn-secondary">
+                <span class="icon">👁️</span>
+                <span>查看页面</span>
+            </a>
+        </div>
+
+        <div class="features">
+            <h3>✨ 功能特点</h3>
+            <div class="feature-list">
+                <div class="feature-item">时间线展示</div>
+                <div class="feature-item">Excel 导入导出</div>
+                <div class="feature-item">附件上传</div>
+                <div class="feature-item">图片视频预览</div>
+                <div class="feature-item">智能存储</div>
+                <div class="feature-item">响应式设计</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>📡 数据存储在 GitHub 仓库中，所有人共享访问</p>
+            <p style="margin-top: 10px;">
+                <a href="README.md" target="_blank">📖 使用说明</a> |
+                <a href="部署指南.md" target="_blank">🚀 部署教程</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

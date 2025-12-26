@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>更新日志</title>
+    <!-- SheetJS 库用于处理 Excel 文件 -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <!-- GitHub 存储模块 -->
+    <script src="github-storage.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            border-left: 4px solid #ff8800;
+            padding-left: 12px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .add-btn {
+            background-color: #ff8800;
+        }
+
+        .add-btn:hover {
+            background-color: #ff9922;
+        }
+
+        .export-btn {
+            background-color: #4CAF50;
+        }
+
+        .export-btn:hover {
+            background-color: #45a049;
+        }
+
+        .import-btn {
+            background-color: #2196F3;
+        }
+
+        .import-btn:hover {
+            background-color: #0b7dda;
+        }
+
+        .clear-btn {
+            background-color: #f44336;
+        }
+
+        .clear-btn:hover {
+            background-color: #da190b;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* 时间线样式 */
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 40px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -33px;
+            top: 8px;
+            width: 12px;
+            height: 12px;
+            background-color: #ff8800;
+            border-radius: 50%;
+            z-index: 2;
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -28px;
+            top: 20px;
+            width: 2px;
+            height: calc(100% - 20px);
+            background-color: #e0e0e0;
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        .update-date {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff8800;
+            margin-bottom: 15px;
+        }
+
+        .update-content {
+            background-color: #fafafa;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 3px solid #ff8800;
+            position: relative;
+        }
+
+        .delete-log-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        .delete-log-btn:hover {
+            opacity: 1;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        .update-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            color: #333;
+            margin: 15px 0 10px 0;
+        }
+
+        .update-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .update-list li {
+            padding: 8px 0;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .update-list li::before {
+            content: "• ";
+            color: #ff8800;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .link-text {
+            color: #1890ff;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .link-text:hover {
+            text-decoration: underline;
+        }
+
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: white;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 8px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            font-size: 28px;
+            color: #999;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .update-items {
+            margin-top: 10px;
+        }
+
+        .update-item-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: flex-start;
+        }
+
+        .update-item-input input,
+        .update-item-input textarea {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .remove-item-btn {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .add-item-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .submit-btn {
+            background-color: #ff8800;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            background-color: #ff9922;
+        }
+
+        .simple-update {
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* 附件相关样式 */
+        .attachment-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+
+        .attachment-icon {
+            font-size: 20px;
+        }
+
+        .attachment-name {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .attachment-size {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .attachment-remove {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .attachments-display {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+
+        .attachments-display h4 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .attachment-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            margin: 5px 5px 5px 0;
+            background-color: #e3f2fd;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #1976d2;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid #90caf9;
+        }
+
+        .attachment-link:hover {
+            background-color: #bbdefb;
+        }
+
+        .attachment-preview {
+            max-width: 200px;
+            max-height: 150px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">最新动态</div>
+            <div class="header-actions">
+                <button class="btn" onclick="window.location.href='config.html'" style="background-color: #9C27B0;">⚙️ GitHub配置</button>
+                <button class="btn" onclick="syncFromGitHub()" style="background-color: #2196F3;" id="syncBtn">🔄 同步数据</button>
+                <button class="btn export-btn" onclick="exportToExcel()">导出Excel</button>
+                <button class="btn export-btn" onclick="exportAllAttachments()" style="background-color: #FF9800;">导出全部附件</button>
+                <button class="btn import-btn" onclick="document.getElementById('fileInput').click()">导入Excel</button>
+                <button class="btn export-btn" onclick="downloadExcelTemplate()" style="background-color: #9C27B0;">下载模板</button>
+                <button class="btn clear-btn" onclick="clearAllData()">清空数据</button>
+                <button class="btn add-btn" onclick="openModal()">+ 添加更新日志</button>
+            </div>
+            <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls" onchange="importFromExcel(event)">
+        </div>
+
+        <!-- GitHub 状态提示 -->
+        <div id="githubStatus" style="display: none; background-color: #e3f2fd; border-left: 4px solid #2196F3; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+            <p style="color: #1976d2; font-size: 14px; margin-bottom: 5px;">
+                <strong>📡 GitHub 在线存储已启用</strong>
+            </p>
+            <p style="color: #1565c0; font-size: 13px;" id="githubInfo"></p>
+        </div>
+
+        <div class="timeline" id="timeline">
+            <!-- 更新日志将在这里动态显示 -->
+        </div>
+    </div>
+
+    <!-- 添加更新日志的模态框 -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 style="margin-bottom: 20px; color: #333;">添加更新日志</h2>
+
+            <form id="updateForm" onsubmit="addUpdate(event)">
+                <div class="form-group">
+                    <label>更新日期</label>
+                    <input type="date" id="updateDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label>更新标题</label>
+                    <input type="text" id="updateTitle" placeholder="例如：2025-12-21周更新" required>
+                </div>
+
+                <div class="form-group">
+                    <label>重要更新</label>
+                    <div id="importantUpdates" class="update-items"></div>
+                    <button type="button" class="add-item-btn" onclick="addUpdateItem('important')">+ 添加重要更新</button>
+                </div>
+
+                <div class="form-group">
+                    <label>日常更新</label>
+                    <div id="dailyUpdates" class="update-items"></div>
+                    <button type="button" class="add-item-btn" onclick="addUpdateItem('daily')">+ 添加日常更新</button>
+                </div>
+
+                <div class="form-group">
+                    <label>上传附件（可选）</label>
+                    <p style="font-size: 12px; color: #999; margin-bottom: 10px;">
+                        支持：图片（jpg, png, gif）、Word文档（doc, docx）、视频（mp4, avi）
+                        <br><strong>智能存储：</strong>小文件(&lt;1MB)存储在浏览器中，大文件(&ge;1MB)自动下载到本地
+                    </p>
+                    <input type="file" id="attachmentInput" multiple
+                           accept=".jpg,.jpeg,.png,.gif,.doc,.docx,.mp4,.avi,.mov,.wmv"
+                           onchange="handleAttachmentChange(event)">
+                    <div id="attachmentList" style="margin-top: 10px;"></div>
+                </div>
+
+                <button type="submit" class="submit-btn">提交更新</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 附件预览模态框 -->
+    <div id="previewModal" class="modal" onclick="closePreview(event)">
+        <div style="position: relative; max-width: 90%; max-height: 90%; margin: 50px auto;">
+            <span class="close-btn" onclick="closePreview()" style="position: fixed; right: 30px; top: 30px; z-index: 1001; background: rgba(0,0,0,0.7); color: white; width: 40px; height: 40px; text-align: center; line-height: 40px; border-radius: 50%;">&times;</span>
+            <div id="previewContent" style="text-align: center;"></div>
+        </div>
+    </div>
+
+    <script>
+        // localStorage 键名
+        const STORAGE_KEY = 'updateLogs';
+
+        // 当前选中的附件（临时存储）
+        let currentAttachments = [];
+
+        // 存储所有日志数据供预览使用
+        let allLogsData = [];
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initGitHubStatus();
+            loadAndRenderLogs();
+        });
+
+        // 初始化 GitHub 状态显示
+        function initGitHubStatus() {
+            if (githubStorage.isConfigured()) {
+                const config = githubStorage.getConfigInfo();
+                const statusDiv = document.getElementById('githubStatus');
+                const infoP = document.getElementById('githubInfo');
+
+                infoP.innerHTML = `仓库：<a href="${config.repoUrl}" target="_blank" style="color: #1565c0; text-decoration: none;">${config.username}/${config.repo}</a> (${config.branch} 分支)`;
+                statusDiv.style.display = 'block';
+            }
+        }
+
+        // 从 GitHub/localStorage 加载数据
+        async function loadLogs() {
+            try {
+                const logs = await githubStorage.loadLogs();
+                return logs;
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                return [];
+            }
+        }
+
+        // 保存数据到 GitHub/localStorage
+        async function saveLogs(logs) {
+            try {
+                const success = await githubStorage.saveLogs(logs);
+                return success;
+            } catch (error) {
+                console.error('保存数据失败:', error);
+                // 失败时至少尝试保存到本地
+                return githubStorage.saveLogsToLocal(logs);
+            }
+        }
+
+        // 手动从 GitHub 同步数据
+        async function syncFromGitHub() {
+            if (!githubStorage.isConfigured()) {
+                alert('请先配置 GitHub 连接！\n\n点击左上角"GitHub配置"按钮进行配置。');
+                return;
+            }
+
+            const syncBtn = document.getElementById('syncBtn');
+            const originalText = syncBtn.innerHTML;
+            syncBtn.innerHTML = '⏳ 同步中...';
+            syncBtn.disabled = true;
+
+            try {
+                const logs = await githubStorage.syncFromGitHub();
+                await loadAndRenderLogs();
+                alert(`✅ 同步成功！\n\n从 GitHub 加载了 ${logs.length} 条更新日志。`);
+            } catch (error) {
+                alert('❌ 同步失败：' + error.message);
+            } finally {
+                syncBtn.innerHTML = originalText;
+                syncBtn.disabled = false;
+            }
+        }
+
+        // 渲染单个日志项
+        function renderLogItem(log, index) {
+            const timelineItem = document.createElement('div');
+            timelineItem.className = 'timeline-item';
+            timelineItem.dataset.index = index;
+
+            let contentHTML = `
+                <div class="update-date">${log.date}</div>
+                <div class="update-content">
+                    <button class="delete-log-btn" onclick="deleteLog(${index})">删除</button>
+                    <div class="update-title">${log.title}</div>
+            `;
+
+            if (log.importantItems && log.importantItems.length > 0) {
+                contentHTML += '<div class="section-title">重要更新</div><ul class="update-list">';
+                log.importantItems.forEach(item => {
+                    contentHTML += `<li>${escapeHtml(item)}</li>`;
+                });
+                contentHTML += '</ul>';
+            }
+
+            if (log.dailyItems && log.dailyItems.length > 0) {
+                contentHTML += '<div class="section-title">日常更新</div><ul class="update-list">';
+                log.dailyItems.forEach(item => {
+                    contentHTML += `<li>${escapeHtml(item)}</li>`;
+                });
+                contentHTML += '</ul>';
+            }
+
+            // 添加附件显示
+            if (log.attachments && log.attachments.length > 0) {
+                contentHTML += '<div class="attachments-display">';
+                contentHTML += '<h4>📎 附件 (' + log.attachments.length + ')</h4>';
+
+                log.attachments.forEach((att, attIndex) => {
+                    if (att.isLocalFile) {
+                        // 本地文件引用 - 添加预览功能
+                        const badge = '<span style="background: #4CAF50; color: white; padding: 1px 4px; border-radius: 2px; font-size: 10px; margin-left: 5px;">本地</span>';
+                        const isImage = att.type && att.type.startsWith('image/');
+                        const isVideo = att.type && att.type.startsWith('video/');
+
+                        contentHTML += `<div class="attachment-link" style="border: 2px dashed #4CAF50; cursor: pointer; display: inline-block;"
+                                        onclick="selectLocalFileForPreview(${index}, ${attIndex})"
+                                        title="点击选择本地文件进行预览">
+                                        ${getFileIcon(att.name)} ${escapeHtml(att.name)} ${badge}
+                                        <span style="font-size: 11px; color: #999;">(${formatFileSize(att.size)})</span>
+                                        <br><span style="font-size: 10px; color: #FF9800;">点击选择文件预览</span>
+                                        </div>`;
+                    } else {
+                        // Base64存储的文件
+                        const isImage = att.type && att.type.startsWith('image/');
+                        const isVideo = att.type && att.type.startsWith('video/');
+
+                        if (isImage && att.data) {
+                            // 图片：显示缩略图，点击放大
+                            contentHTML += `<div style="display: inline-block; margin: 5px; position: relative;">
+                                            <img src="${att.data}" alt="${escapeHtml(att.name)}" class="attachment-preview"
+                                                onclick="showPreview(${index}, ${attIndex})"
+                                                style="cursor: pointer;"
+                                                title="点击预览大图">
+                                            <div style="font-size: 11px; color: #666; text-align: center; margin-top: 3px;">${escapeHtml(att.name)}</div>
+                                            </div>`;
+                        } else if (isVideo && att.data) {
+                            // 视频：显示播放器
+                            const videoId = 'video_' + index + '_' + attIndex;
+                            contentHTML += `<div style="display: inline-block; margin: 10px; max-width: 400px;">
+                                            <video id="${videoId}" controls preload="metadata" style="max-width: 100%; border-radius: 4px; border: 1px solid #ddd;">
+                                                <source src="${att.data}" type="${att.type}">
+                                                您的浏览器不支持视频播放
+                                            </video>
+                                            <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                                                ${getFileIcon(att.name)} ${escapeHtml(att.name)} (${formatFileSize(att.size)})
+                                                <a href="javascript:void(0)" onclick="downloadAttachmentByIndex(${index}, ${attIndex})" style="margin-left: 10px; color: #1976d2; text-decoration: none;">下载</a>
+                                            </div>
+                                            </div>`;
+                        } else if (att.data) {
+                            // 其他文件：显示下载链接
+                            contentHTML += `<a class="attachment-link" href="javascript:void(0)" onclick="downloadAttachmentByIndex(${index}, ${attIndex})" title="${formatFileSize(att.size)}">
+                                            ${getFileIcon(att.name)} ${escapeHtml(att.name)}
+                                            </a>`;
+                        }
+                    }
+                });
+
+                contentHTML += '</div>';
+            }
+
+            contentHTML += '</div>';
+            timelineItem.innerHTML = contentHTML;
+
+            return timelineItem;
+        }
+
+        // 渲染所有日志
+        async function loadAndRenderLogs() {
+            const logs = await loadLogs();
+            allLogsData = logs; // 保存到全局变量
+            const timeline = document.getElementById('timeline');
+            timeline.innerHTML = '';
+
+            if (logs.length === 0) {
+                // 显示空状态
+                timeline.innerHTML = `
+                    <div class="empty-state">
+                        <h3>暂无更新日志</h3>
+                        <p>点击右上角"添加更新日志"按钮开始添加</p>
+                    </div>
+                `;
+                return;
+            }
+
+            logs.forEach((log, index) => {
+                timeline.appendChild(renderLogItem(log, index));
+            });
+        }
+
+        // 删除日志
+        async function deleteLog(index) {
+            if (confirm('确定要删除这条更新日志吗？')) {
+                const logs = await loadLogs();
+                logs.splice(index, 1);
+                await saveLogs(logs);
+                await loadAndRenderLogs();
+            }
+        }
+
+        // HTML 转义，防止 XSS，同时支持换行
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            // 将换行符转换为 <br> 标签
+            return div.innerHTML.replace(/\n/g, '<br>');
+        }
+
+        // 打开模态框
+        function openModal() {
+            document.getElementById('modal').style.display = 'block';
+            // 设置默认日期为今天
+            document.getElementById('updateDate').valueAsDate = new Date();
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+            document.getElementById('updateForm').reset();
+            document.getElementById('importantUpdates').innerHTML = '';
+            document.getElementById('dailyUpdates').innerHTML = '';
+            document.getElementById('attachmentList').innerHTML = '';
+            currentAttachments = [];
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // 添加更新项输入框
+        function addUpdateItem(type) {
+            const container = type === 'important' ? document.getElementById('importantUpdates') : document.getElementById('dailyUpdates');
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'update-item-input';
+            itemDiv.innerHTML = `
+                <textarea placeholder="输入更新内容（支持换行）" class="${type}-item" rows="3"></textarea>
+                <button type="button" class="remove-item-btn" onclick="removeUpdateItem(this)">删除</button>
+            `;
+            container.appendChild(itemDiv);
+        }
+
+        // 删除更新项
+        function removeUpdateItem(button) {
+            button.parentElement.remove();
+        }
+
+        // ===== 附件处理函数 =====
+
+        // 处理附件选择
+        function handleAttachmentChange(event) {
+            const files = Array.from(event.target.files);
+            const SIZE_THRESHOLD = 1 * 1024 * 1024; // 1MB
+
+            let largeFilesCount = 0;
+
+            files.forEach(file => {
+                if (file.size >= SIZE_THRESHOLD) {
+                    // 大文件：自动下载到本地，只存储引用
+                    largeFilesCount++;
+
+                    const attachment = {
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        isLocalFile: true, // 标记为本地文件
+                        downloadedAt: new Date().toISOString()
+                    };
+
+                    currentAttachments.push(attachment);
+
+                    // 自动触发下载
+                    const url = URL.createObjectURL(file);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = file.name;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                } else {
+                    // 小文件：存储Base64
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const attachment = {
+                            name: file.name,
+                            size: file.size,
+                            type: file.type,
+                            data: e.target.result, // Base64 数据
+                            isLocalFile: false // 标记为Base64存储
+                        };
+
+                        currentAttachments.push(attachment);
+                        displayAttachmentList();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // 显示附件列表（包括大文件）
+            if (largeFilesCount > 0) {
+                displayAttachmentList();
+                alert(`已自动下载 ${largeFilesCount} 个大文件到本地！\n\n这些文件将作为本地文件引用保存。\n请将下载的文件保存在固定位置，以便查看时使用。`);
+            }
+
+            // 清空文件选择，允许重复选择同一文件
+            event.target.value = '';
+        }
+
+        // 显示附件列表
+        function displayAttachmentList() {
+            const container = document.getElementById('attachmentList');
+            container.innerHTML = '';
+
+            currentAttachments.forEach((att, index) => {
+                const item = document.createElement('div');
+                item.className = 'attachment-item';
+
+                const storageType = att.isLocalFile ?
+                    '<span style="background: #4CAF50; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-left: 5px;">本地文件</span>' :
+                    '<span style="background: #2196F3; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-left: 5px;">浏览器</span>';
+
+                item.innerHTML = `
+                    <span class="attachment-icon">${getFileIcon(att.name)}</span>
+                    <span class="attachment-name" title="${att.name}">${att.name}</span>
+                    ${storageType}
+                    <span class="attachment-size">${formatFileSize(att.size)}</span>
+                    <button type="button" class="attachment-remove" onclick="removeAttachment(${index})">删除</button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // 删除附件
+        function removeAttachment(index) {
+            currentAttachments.splice(index, 1);
+            displayAttachmentList();
+        }
+
+        // 获取文件图标
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const icons = {
+                'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🖼️',
+                'doc': '📄', 'docx': '📄',
+                'mp4': '🎬', 'avi': '🎬', 'mov': '🎬', 'wmv': '🎬'
+            };
+            return icons[ext] || '📎';
+        }
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // 下载附件
+        function downloadAttachment(data, filename) {
+            const a = document.createElement('a');
+            a.href = data;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // 提交更新
+        async function addUpdate(event) {
+            event.preventDefault();
+
+            const date = document.getElementById('updateDate').value;
+            const title = document.getElementById('updateTitle').value;
+            const importantItems = Array.from(document.querySelectorAll('.important-item'))
+                .map(input => input.value)
+                .filter(v => v.trim());
+            const dailyItems = Array.from(document.querySelectorAll('.daily-item'))
+                .map(input => input.value)
+                .filter(v => v.trim());
+
+            // 格式化日期
+            const formattedDate = date.replace(/-/g, '.');
+
+            // 创建新的日志对象
+            const newLog = {
+                date: formattedDate,
+                title: title,
+                importantItems: importantItems,
+                dailyItems: dailyItems,
+                attachments: currentAttachments.length > 0 ? [...currentAttachments] : [],
+                timestamp: new Date(date).getTime()
+            };
+
+            // 加载现有日志
+            const logs = await loadLogs();
+
+            // 添加新日志到开头
+            logs.unshift(newLog);
+
+            // 按日期排序（最新的在前面）
+            logs.sort((a, b) => b.timestamp - a.timestamp);
+
+            // 保存到 GitHub
+            await saveLogs(logs);
+
+            // 重新渲染
+            await loadAndRenderLogs();
+
+            // 关闭模态框
+            closeModal();
+
+            // 显示成功提示
+            alert('更新日志添加成功！');
+        }
+
+        // 导出数据为 JSON 文件
+        async function exportData() {
+            const logs = await loadLogs();
+
+            if (logs.length === 0) {
+                alert('暂无数据可导出！');
+                return;
+            }
+
+            // 创建数据对象
+            const data = {
+                exportDate: new Date().toISOString(),
+                version: '1.0',
+                logs: logs
+            };
+
+            // 转换为 JSON 字符串
+            const jsonStr = JSON.stringify(data, null, 2);
+
+            // 创建 Blob 对象
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+
+            // 创建下载链接
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+
+            // 生成文件名：update-logs-YYYYMMDD.json
+            const today = new Date();
+            const dateStr = today.getFullYear() +
+                          String(today.getMonth() + 1).padStart(2, '0') +
+                          String(today.getDate()).padStart(2, '0');
+            a.download = `update-logs-${dateStr}.json`;
+
+            // 触发下载
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert('数据导出成功！');
+        }
+
+        // 导入数据从 JSON 文件
+        async function importData(event) {
+            const file = event.target.files[0];
+
+            if (!file) {
+                return;
+            }
+
+            // 检查文件类型
+            if (!file.name.endsWith('.json')) {
+                alert('请选择 JSON 文件！');
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = async function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+
+                    // 验证数据格式
+                    if (!data.logs || !Array.isArray(data.logs)) {
+                        alert('文件格式不正确！');
+                        return;
+                    }
+
+                    // 询问用户是覆盖还是合并
+                    const action = confirm('点击"确定"覆盖现有数据\n点击"取消"合并到现有数据');
+
+                    let logs = [];
+                    if (action) {
+                        // 覆盖模式
+                        logs = data.logs;
+                    } else {
+                        // 合并模式
+                        const existingLogs = await loadLogs();
+                        logs = [...existingLogs, ...data.logs];
+
+                        // 去重：基于日期和标题
+                        const uniqueLogs = [];
+                        const seen = new Set();
+
+                        logs.forEach(log => {
+                            const key = `${log.date}-${log.title}`;
+                            if (!seen.has(key)) {
+                                seen.add(key);
+                                uniqueLogs.push(log);
+                            }
+                        });
+
+                        logs = uniqueLogs;
+                    }
+
+                    // 按日期排序
+                    logs.sort((a, b) => b.timestamp - a.timestamp);
+
+                    // 保存到 GitHub
+                    await saveLogs(logs);
+
+                    // 重新渲染
+                    await loadAndRenderLogs();
+
+                    alert(`数据导入成功！共导入 ${data.logs.length} 条记录。`);
+                } catch (error) {
+                    alert('文件解析失败，请检查文件格式！');
+                    console.error(error);
+                }
+
+                // 清空文件选择
+                event.target.value = '';
+            };
+
+            reader.readAsText(file);
+        }
+
+        // 清空所有数据
+        async function clearAllData() {
+            const logs = await loadLogs();
+
+            if (logs.length === 0) {
+                alert('当前没有数据！');
+                return;
+            }
+
+            if (confirm(`确定要清空所有数据吗？\n这将删除 ${logs.length} 条更新日志，此操作不可恢复！`)) {
+                // 清空数据
+                await saveLogs([]);
+
+                // 重新渲染
+                await loadAndRenderLogs();
+
+                alert('所有数据已清空！');
+            }
+        }
+
+        // 下载导入模板
+        function downloadTemplate() {
+            // 创建示例数据
+            const templateData = {
+                exportDate: new Date().toISOString(),
+                version: "1.0",
+                logs: [
+                    {
+                        date: "2025.12.26",
+                        title: "2025-12-26周更新",
+                        importantItems: [
+                            "这是一个重要更新示例\n可以使用换行来分段说明",
+                            "第二个重要更新项"
+                        ],
+                        dailyItems: [
+                            "这是一个日常更新示例",
+                            "支持多行文本\n第二行内容\n第三行内容",
+                            "第三个日常更新项"
+                        ],
+                        timestamp: new Date("2025-12-26").getTime()
+                    },
+                    {
+                        date: "2025.12.20",
+                        title: "2025-12-20周更新",
+                        importantItems: [
+                            "示例重要更新"
+                        ],
+                        dailyItems: [
+                            "示例日常更新1",
+                            "示例日常更新2"
+                        ],
+                        timestamp: new Date("2025-12-20").getTime()
+                    }
+                ]
+            };
+
+            // 转换为 JSON 字符串
+            const jsonStr = JSON.stringify(templateData, null, 2);
+
+            // 创建 Blob 对象
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+
+            // 创建下载链接
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'update-logs-template.json';
+
+            // 触发下载
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert('模板文件下载成功！\n\n使用说明：\n1. 打开模板文件进行编辑\n2. 修改日期、标题和更新内容\n3. 保存后通过"导入数据"功能导入');
+        }
+
+        // ===== Excel 处理函数 =====
+
+        // 导出为 Excel
+        async function exportToExcel() {
+            const logs = await loadLogs();
+
+            if (logs.length === 0) {
+                alert('暂无数据可导出！');
+                return;
+            }
+
+            // 准备Excel数据
+            const excelData = [];
+
+            // 添加表头
+            excelData.push(['日期', '标题', '类型', '内容']);
+
+            // 遍历所有日志
+            logs.forEach(log => {
+                // 添加重要更新
+                if (log.importantItems && log.importantItems.length > 0) {
+                    log.importantItems.forEach(item => {
+                        excelData.push([log.date, log.title, '重要更新', item]);
+                    });
+                }
+
+                // 添加日常更新
+                if (log.dailyItems && log.dailyItems.length > 0) {
+                    log.dailyItems.forEach(item => {
+                        excelData.push([log.date, log.title, '日常更新', item]);
+                    });
+                }
+
+                // 如果没有任何更新项，至少添加一行基本信息
+                if ((!log.importantItems || log.importantItems.length === 0) &&
+                    (!log.dailyItems || log.dailyItems.length === 0)) {
+                    excelData.push([log.date, log.title, '', '']);
+                }
+            });
+
+            // 创建工作簿
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(excelData);
+
+            // 设置列宽
+            ws['!cols'] = [
+                { wch: 15 },  // 日期列
+                { wch: 25 },  // 标题列
+                { wch: 12 },  // 类型列
+                { wch: 50 }   // 内容列
+            ];
+
+            // 添加工作表到工作簿
+            XLSX.utils.book_append_sheet(wb, ws, '更新日志');
+
+            // 生成文件名
+            const today = new Date();
+            const dateStr = today.getFullYear() +
+                          String(today.getMonth() + 1).padStart(2, '0') +
+                          String(today.getDate()).padStart(2, '0');
+
+            // 导出文件
+            XLSX.writeFile(wb, `update-logs-${dateStr}.xlsx`);
+
+            alert('Excel文件导出成功！');
+        }
+
+        // 从 Excel 导入
+        async function importFromExcel(event) {
+            const file = event.target.files[0];
+
+            if (!file) {
+                return;
+            }
+
+            // 检查文件类型
+            if (!file.name.match(/\.(xlsx|xls)$/)) {
+                alert('请选择 Excel 文件（.xlsx 或 .xls）！');
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = async function(e) {
+                try {
+                    // 读取Excel文件
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+
+                    // 获取第一个工作表
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+
+                    // 转换为JSON数组
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    // 验证数据格式
+                    if (jsonData.length < 2) {
+                        alert('Excel文件格式不正确！请确保文件包含表头和数据。');
+                        return;
+                    }
+
+                    // 检查表头
+                    const header = jsonData[0];
+                    if (!header.includes('日期') || !header.includes('标题') || !header.includes('类型') || !header.includes('内容')) {
+                        alert('Excel文件格式不正确！\n表头应包含：日期、标题、类型、内容');
+                        return;
+                    }
+
+                    // 解析数据
+                    const logsMap = new Map();
+
+                    for (let i = 1; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        if (!row || row.length === 0) continue;
+
+                        const date = row[0] ? String(row[0]).trim() : '';
+                        const title = row[1] ? String(row[1]).trim() : '';
+                        const type = row[2] ? String(row[2]).trim() : '';
+                        const content = row[3] ? String(row[3]).trim() : '';
+
+                        if (!date || !title) continue;
+
+                        // 使用日期+标题作为唯一键
+                        const key = `${date}-${title}`;
+
+                        if (!logsMap.has(key)) {
+                            logsMap.set(key, {
+                                date: date,
+                                title: title,
+                                importantItems: [],
+                                dailyItems: [],
+                                timestamp: parseDateToTimestamp(date)
+                            });
+                        }
+
+                        const log = logsMap.get(key);
+
+                        if (content) {
+                            if (type === '重要更新') {
+                                log.importantItems.push(content);
+                            } else if (type === '日常更新') {
+                                log.dailyItems.push(content);
+                            }
+                        }
+                    }
+
+                    // 转换为数组
+                    const newLogs = Array.from(logsMap.values());
+
+                    if (newLogs.length === 0) {
+                        alert('Excel文件中没有有效数据！');
+                        return;
+                    }
+
+                    // 询问用户是覆盖还是合并
+                    const action = confirm('点击"确定"覆盖现有数据\n点击"取消"合并到现有数据');
+
+                    let logs = [];
+                    if (action) {
+                        // 覆盖模式
+                        logs = newLogs;
+                    } else {
+                        // 合并模式
+                        const existingLogs = await loadLogs();
+                        logs = [...existingLogs, ...newLogs];
+
+                        // 去重
+                        const uniqueLogs = [];
+                        const seen = new Set();
+
+                        logs.forEach(log => {
+                            const key = `${log.date}-${log.title}`;
+                            if (!seen.has(key)) {
+                                seen.add(key);
+                                uniqueLogs.push(log);
+                            }
+                        });
+
+                        logs = uniqueLogs;
+                    }
+
+                    // 按日期排序
+                    logs.sort((a, b) => b.timestamp - a.timestamp);
+
+                    // 保存到 GitHub
+                    await saveLogs(logs);
+
+                    // 重新渲染
+                    await loadAndRenderLogs();
+
+                    alert(`Excel导入成功！共导入 ${newLogs.length} 条记录。`);
+                } catch (error) {
+                    alert('Excel文件解析失败，请检查文件格式！');
+                    console.error(error);
+                }
+
+                // 清空文件选择
+                event.target.value = '';
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        // 下载 Excel 模板
+        function downloadExcelTemplate() {
+            // 准备模板数据
+            const templateData = [
+                ['日期', '标题', '类型', '内容'],
+                ['2025.12.26', '2025-12-26周更新', '重要更新', '这是一个重要更新示例\n可以使用换行来分段说明'],
+                ['2025.12.26', '2025-12-26周更新', '重要更新', '第二个重要更新项'],
+                ['2025.12.26', '2025-12-26周更新', '日常更新', '这是一个日常更新示例'],
+                ['2025.12.26', '2025-12-26周更新', '日常更新', '支持多行文本\n第二行内容\n第三行内容'],
+                ['2025.12.20', '2025-12-20周更新', '重要更新', '示例重要更新'],
+                ['2025.12.20', '2025-12-20周更新', '日常更新', '示例日常更新1'],
+                ['2025.12.20', '2025-12-20周更新', '日常更新', '示例日常更新2']
+            ];
+
+            // 创建工作簿
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(templateData);
+
+            // 设置列宽
+            ws['!cols'] = [
+                { wch: 15 },  // 日期列
+                { wch: 25 },  // 标题列
+                { wch: 12 },  // 类型列
+                { wch: 50 }   // 内容列
+            ];
+
+            // 添加工作表到工作簿
+            XLSX.utils.book_append_sheet(wb, ws, '更新日志');
+
+            // 导出文件
+            XLSX.writeFile(wb, 'update-logs-template.xlsx');
+
+            alert('Excel模板下载成功！\n\n使用说明：\n1. 打开下载的Excel文件\n2. 参考示例格式填写更新日志\n3. 日期格式：YYYY.MM.DD\n4. 类型只能填：重要更新 或 日常更新\n5. 内容支持换行\n6. 保存后通过"导入Excel"功能导入');
+        }
+
+        // 辅助函数：将日期字符串转换为时间戳
+        function parseDateToTimestamp(dateStr) {
+            try {
+                // 支持格式：2025.12.26 或 2025-12-26
+                const normalized = dateStr.replace(/\./g, '-');
+                return new Date(normalized).getTime();
+            } catch (error) {
+                return Date.now();
+            }
+        }
+
+        // 导出全部附件
+        async function exportAllAttachments() {
+            const logs = await loadLogs();
+            let attachmentCount = 0;
+            let base64AttachmentCount = 0;
+
+            // 统计附件数量
+            logs.forEach(log => {
+                if (log.attachments && log.attachments.length > 0) {
+                    log.attachments.forEach(att => {
+                        attachmentCount++;
+                        if (!att.isLocalFile && att.data) {
+                            base64AttachmentCount++;
+                        }
+                    });
+                }
+            });
+
+            if (base64AttachmentCount === 0) {
+                alert('没有可导出的附件！\n\n说明：\n- 大文件(≥1MB)已在上传时自动下载到本地\n- 只有小文件(<1MB)存储在浏览器中可以导出');
+                return;
+            }
+
+            const confirmMsg = `发现 ${base64AttachmentCount} 个可导出的附件（共${attachmentCount}个附件）。\n\n` +
+                             `这些附件将逐个下载到您的下载文件夹。\n\n` +
+                             `注意：大文件(≥1MB)已在上传时下载，此处仅导出小文件。\n\n` +
+                             `是否继续？`;
+
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+
+            let downloadedCount = 0;
+
+            // 遍历所有日志，下载Base64附件
+            logs.forEach(log => {
+                if (log.attachments && log.attachments.length > 0) {
+                    log.attachments.forEach(att => {
+                        if (!att.isLocalFile && att.data) {
+                            // 延迟下载，避免浏览器阻止
+                            setTimeout(() => {
+                                downloadAttachment(att.data, att.name);
+                                downloadedCount++;
+
+                                // 最后一个文件下载后提示
+                                if (downloadedCount === base64AttachmentCount) {
+                                    setTimeout(() => {
+                                        alert(`成功导出 ${base64AttachmentCount} 个附件！\n\n文件已保存到您的下载文件夹。`);
+                                    }, 500);
+                                }
+                            }, downloadedCount * 300); // 每个文件间隔300ms
+                        }
+                    });
+                }
+            });
+        }
+
+        // 显示附件预览
+        function showPreview(logIndex, attIndex) {
+            const log = allLogsData[logIndex];
+            if (!log || !log.attachments || !log.attachments[attIndex]) {
+                console.error('附件不存在');
+                return;
+            }
+
+            const att = log.attachments[attIndex];
+            const modal = document.getElementById('previewModal');
+            const content = document.getElementById('previewContent');
+
+            content.innerHTML = `
+                <img src="${att.data}" alt="${att.name}"
+                     style="max-width: 100%; max-height: 85vh; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                <div style="color: white; margin-top: 15px; font-size: 14px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 4px; display: inline-block;">
+                    ${att.name}
+                    <a href="javascript:void(0)" onclick="downloadAttachmentByIndex(${logIndex}, ${attIndex})"
+                       style="margin-left: 15px; color: #4CAF50; text-decoration: none; font-weight: bold;">下载</a>
+                </div>
+            `;
+
+            modal.style.display = 'block';
+        }
+
+        // 通过索引下载附件
+        function downloadAttachmentByIndex(logIndex, attIndex) {
+            const log = allLogsData[logIndex];
+            if (!log || !log.attachments || !log.attachments[attIndex]) {
+                console.error('附件不存在');
+                return;
+            }
+
+            const att = log.attachments[attIndex];
+            downloadAttachment(att.data, att.name);
+        }
+
+        // 关闭预览
+        function closePreview(event) {
+            const modal = document.getElementById('previewModal');
+            // 只有点击背景或关闭按钮时才关闭
+            if (!event || event.target === modal || event.target.className === 'close-btn') {
+                modal.style.display = 'none';
+            }
+        }
+
+        // 选择本地文件进行预览
+        function selectLocalFileForPreview(logIndex, attIndex) {
+            const log = allLogsData[logIndex];
+            if (!log || !log.attachments || !log.attachments[attIndex]) {
+                console.error('附件引用不存在');
+                return;
+            }
+
+            const att = log.attachments[attIndex];
+
+            // 创建文件选择输入框
+            const input = document.createElement('input');
+            input.type = 'file';
+
+            // 根据附件类型设置接受的文件类型
+            if (att.type) {
+                input.accept = att.type;
+            } else {
+                // 根据文件扩展名猜测类型
+                const ext = att.name.split('.').pop().toLowerCase();
+                if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+                    input.accept = 'image/*';
+                } else if (['mp4', 'avi', 'mov', 'wmv'].includes(ext)) {
+                    input.accept = 'video/*';
+                } else if (['doc', 'docx'].includes(ext)) {
+                    input.accept = '.doc,.docx';
+                } else {
+                    input.accept = '*/*';
+                }
+            }
+
+            // 文件选择后的处理
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) {
+                    return;
+                }
+
+                // 验证文件名是否匹配（可选，给用户提示）
+                if (file.name !== att.name) {
+                    const confirmLoad = confirm(`选择的文件名 "${file.name}" 与原文件名 "${att.name}" 不匹配。\n\n是否继续预览？`);
+                    if (!confirmLoad) {
+                        return;
+                    }
+                }
+
+                const isImage = file.type.startsWith('image/');
+                const isVideo = file.type.startsWith('video/');
+
+                if (isImage) {
+                    // 预览图片
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        showImagePreview(event.target.result, file.name);
+                    };
+                    reader.readAsDataURL(file);
+                } else if (isVideo) {
+                    // 预览视频
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        showVideoPreview(event.target.result, file.name, file.type);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    alert('该文件类型不支持预览，仅支持图片和视频预览。');
+                }
+            };
+
+            // 触发文件选择
+            input.click();
+        }
+
+        // 显示图片预览
+        function showImagePreview(dataUrl, filename) {
+            const modal = document.getElementById('previewModal');
+            const content = document.getElementById('previewContent');
+
+            content.innerHTML = `
+                <img src="${dataUrl}" alt="${escapeHtml(filename)}"
+                     style="max-width: 100%; max-height: 85vh; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                <div style="color: white; margin-top: 15px; font-size: 14px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 4px; display: inline-block;">
+                    ${escapeHtml(filename)} [本地文件]
+                </div>
+            `;
+
+            modal.style.display = 'block';
+        }
+
+        // 显示视频预览
+        function showVideoPreview(dataUrl, filename, mimeType) {
+            const modal = document.getElementById('previewModal');
+            const content = document.getElementById('previewContent');
+
+            content.innerHTML = `
+                <video controls autoplay preload="metadata"
+                       style="max-width: 100%; max-height: 85vh; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                    <source src="${dataUrl}" type="${mimeType}">
+                    您的浏览器不支持视频播放
+                </video>
+                <div style="color: white; margin-top: 15px; font-size: 14px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 4px; display: inline-block;">
+                    ${escapeHtml(filename)} [本地文件]
+                </div>
+            `;
+
+            modal.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

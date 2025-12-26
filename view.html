@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>更新日志 - 查看</title>
+    <!-- GitHub 存储模块 -->
+    <script src="github-storage.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            border-left: 4px solid #ff8800;
+            padding-left: 12px;
+        }
+
+        .load-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .load-btn:hover {
+            background-color: #0b7dda;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* 时间线样式 */
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 40px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -33px;
+            top: 8px;
+            width: 12px;
+            height: 12px;
+            background-color: #ff8800;
+            border-radius: 50%;
+            z-index: 2;
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -28px;
+            top: 20px;
+            width: 2px;
+            height: calc(100% - 20px);
+            background-color: #e0e0e0;
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        .update-date {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff8800;
+            margin-bottom: 15px;
+        }
+
+        .update-content {
+            background-color: #fafafa;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 3px solid #ff8800;
+        }
+
+        .update-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            color: #333;
+            margin: 15px 0 10px 0;
+        }
+
+        .update-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .update-list li {
+            padding: 8px 0;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .update-list li::before {
+            content: "• ";
+            color: #ff8800;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .info-banner {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            color: #1976d2;
+        }
+
+        .info-banner p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        /* 附件相关样式 */
+        .attachments-display {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+
+        .attachments-display h4 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .attachment-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            margin: 5px 5px 5px 0;
+            background-color: #e3f2fd;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #1976d2;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid #90caf9;
+        }
+
+        .attachment-link:hover {
+            background-color: #bbdefb;
+        }
+
+        .attachment-preview {
+            max-width: 200px;
+            max-height: 150px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">最新动态</div>
+            <button class="load-btn" onclick="loadDataFile(document.getElementById('fileInput'))" style="display:none;">加载数据文件</button>
+            <button class="load-btn" onclick="refreshFromGitHub()" id="refreshBtn">🔄 刷新数据</button>
+            <input type="file" id="fileInput" class="file-input" accept=".json" onchange="loadDataFile(event)" style="display:none;">
+        </div>
+
+        <!-- GitHub 状态提示 -->
+        <div id="githubStatus" style="display: none; background-color: #e3f2fd; border-left: 4px solid #2196F3; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+            <p style="color: #1976d2; font-size: 14px; margin-bottom: 5px;">
+                <strong>📡 从 GitHub 自动加载数据</strong>
+            </p>
+            <p style="color: #1565c0; font-size: 13px;" id="githubInfo"></p>
+        </div>
+
+        <div id="infoBanner" class="info-banner" style="display: none;">
+            <p><strong>数据加载成功</strong></p>
+            <p id="infoText"></p>
+        </div>
+
+        <div class="timeline" id="timeline">
+            <!-- 更新日志将在这里动态显示 -->
+        </div>
+    </div>
+
+    <script>
+        // localStorage 键名（只读）
+        const STORAGE_KEY = 'updateLogs';
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initGitHubStatus();
+            loadAndRenderLogs();
+        });
+
+        // 初始化 GitHub 状态显示
+        function initGitHubStatus() {
+            if (githubStorage.isConfigured()) {
+                const config = githubStorage.getConfigInfo();
+                const statusDiv = document.getElementById('githubStatus');
+                const infoP = document.getElementById('githubInfo');
+
+                infoP.innerHTML = `仓库：<a href="${config.repoUrl}" target="_blank" style="color: #1565c0; text-decoration: none;">${config.username}/${config.repo}</a> (${config.branch} 分支)`;
+                statusDiv.style.display = 'block';
+            }
+        }
+
+        // 从 GitHub/localStorage 读取数据（只读）
+        async function loadLogs() {
+            try {
+                const logs = await githubStorage.loadLogs();
+                return logs;
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                return [];
+            }
+        }
+
+        // 刷新数据（从 GitHub 重新加载）
+        async function refreshFromGitHub() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            const originalText = refreshBtn.innerHTML;
+            refreshBtn.innerHTML = '⏳ 刷新中...';
+            refreshBtn.disabled = true;
+
+            try {
+                const logs = await githubStorage.syncFromGitHub();
+                await loadAndRenderLogs();
+
+                // 显示提示
+                const infoBanner = document.getElementById('infoBanner');
+                const infoText = document.getElementById('infoText');
+                infoText.textContent = `成功刷新！共 ${logs.length} 条更新日志`;
+                infoBanner.style.display = 'block';
+
+                setTimeout(() => {
+                    infoBanner.style.display = 'none';
+                }, 3000);
+            } catch (error) {
+                alert('❌ 刷新失败：' + error.message);
+            } finally {
+                refreshBtn.innerHTML = originalText;
+                refreshBtn.disabled = false;
+            }
+        }
+
+        // 渲染单个日志项
+        function renderLogItem(log) {
+            const timelineItem = document.createElement('div');
+            timelineItem.className = 'timeline-item';
+
+            let contentHTML = `
+                <div class="update-date">${escapeHtml(log.date)}</div>
+                <div class="update-content">
+                    <div class="update-title">${escapeHtml(log.title)}</div>
+            `;
+
+            if (log.importantItems && log.importantItems.length > 0) {
+                contentHTML += '<div class="section-title">重要更新</div><ul class="update-list">';
+                log.importantItems.forEach(item => {
+                    contentHTML += `<li>${escapeHtml(item)}</li>`;
+                });
+                contentHTML += '</ul>';
+            }
+
+            if (log.dailyItems && log.dailyItems.length > 0) {
+                contentHTML += '<div class="section-title">日常更新</div><ul class="update-list">';
+                log.dailyItems.forEach(item => {
+                    contentHTML += `<li>${escapeHtml(item)}</li>`;
+                });
+                contentHTML += '</ul>';
+            }
+
+            // 添加附件显示
+            if (log.attachments && log.attachments.length > 0) {
+                contentHTML += '<div class="attachments-display">';
+                contentHTML += '<h4>📎 附件 (' + log.attachments.length + ')</h4>';
+
+                log.attachments.forEach((att, attIndex) => {
+                    if (att.isLocalFile) {
+                        // 本地文件引用 - 添加预览功能
+                        const badge = '<span style="background: #4CAF50; color: white; padding: 1px 4px; border-radius: 2px; font-size: 10px; margin-left: 5px;">本地</span>';
+
+                        contentHTML += `<div class="attachment-link" style="border: 2px dashed #4CAF50; cursor: pointer; display: inline-block;"
+                                        onclick="selectLocalFileForPreview(${index}, ${attIndex})"
+                                        title="点击选择本地文件进行预览">
+                                        ${getFileIcon(att.name)} ${escapeHtml(att.name)} ${badge}
+                                        <span style="font-size: 11px; color: #999;">(${formatFileSize(att.size)})</span>
+                                        <br><span style="font-size: 10px; color: #FF9800;">点击选择文件预览</span>
+                                        </div>`;
+                    } else {
+                        // Base64存储的文件
+                        const isImage = att.type && att.type.startsWith('image/');
+                        const isVideo = att.type && att.type.startsWith('video/');
+
+                        if (isImage && att.data) {
+                            // 图片显示缩略图
+                            contentHTML += `<img src="${att.data}" alt="${escapeHtml(att.name)}" class="attachment-preview"
+                                            onclick="window.open('${att.data}', '_blank')" title="点击查看大图">`;
+                        } else if (isVideo && att.data) {
+                            // 视频显示播放器
+                            const videoId = 'video_' + index + '_' + attIndex;
+                            contentHTML += `<div style="display: inline-block; margin: 10px; max-width: 400px;">
+                                            <video id="${videoId}" controls preload="metadata" style="max-width: 100%; border-radius: 4px; border: 1px solid #ddd;">
+                                                <source src="${att.data}" type="${att.type}">
+                                                您的浏览器不支持视频播放
+                                            </video>
+                                            <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                                                ${getFileIcon(att.name)} ${escapeHtml(att.name)} (${formatFileSize(att.size)})
+                                            </div>
+                                            </div>`;
+                        } else if (att.data) {
+                            // 其他文件显示下载链接
+                            contentHTML += `<a class="attachment-link" href="javascript:void(0)" onclick="downloadAttachment('${att.data}', '${escapeHtml(att.name)}')" title="${formatFileSize(att.size)}">
+                                            ${getFileIcon(att.name)} ${escapeHtml(att.name)}
+                                            </a>`;
+                        }
+                    }
+                });
+
+                contentHTML += '</div>';
+            }
+
+            contentHTML += '</div>';
+            timelineItem.innerHTML = contentHTML;
+
+            return timelineItem;
+        }
+
+        // 渲染所有日志
+        async function loadAndRenderLogs() {
+            const logs = await loadLogs();
+            const timeline = document.getElementById('timeline');
+            timeline.innerHTML = '';
+
+            if (logs.length === 0) {
+                // 显示空状态
+                timeline.innerHTML = `
+                    <div class="empty-state">
+                        <h3>暂无更新日志</h3>
+                        <p>请联系管理员添加更新日志</p>
+                        ${!githubStorage.isConfigured() ? '<p style="font-size: 12px; color: #bbb;">或点击上方"加载数据文件"按钮导入数据</p>' : ''}
+                    </div>
+                `;
+                return;
+            }
+
+            logs.forEach((log) => {
+                timeline.appendChild(renderLogItem(log));
+            });
+        }
+
+        // HTML 转义，防止 XSS，同时支持换行
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            // 将换行符转换为 <br> 标签
+            return div.innerHTML.replace(/\n/g, '<br>');
+        }
+
+        // 从 JSON 文件加载数据
+        function loadDataFile(event) {
+            const file = event.target.files[0];
+
+            if (!file) {
+                return;
+            }
+
+            // 检查文件类型
+            if (!file.name.endsWith('.json')) {
+                alert('请选择 JSON 文件！');
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+
+                    // 验证数据格式
+                    if (!data.logs || !Array.isArray(data.logs)) {
+                        alert('文件格式不正确！');
+                        return;
+                    }
+
+                    // 保存到 localStorage（仅用于当前会话显示）
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(data.logs));
+
+                    // 重新渲染
+                    loadAndRenderLogs();
+
+                    // 显示信息横幅
+                    const infoBanner = document.getElementById('infoBanner');
+                    const infoText = document.getElementById('infoText');
+
+                    const exportDate = data.exportDate ? new Date(data.exportDate).toLocaleString('zh-CN') : '未知';
+                    infoText.textContent = `共加载 ${data.logs.length} 条更新日志 | 数据导出时间: ${exportDate}`;
+                    infoBanner.style.display = 'block';
+
+                    // 3秒后隐藏横幅
+                    setTimeout(() => {
+                        infoBanner.style.display = 'none';
+                    }, 5000);
+
+                } catch (error) {
+                    alert('文件解析失败，请检查文件格式！');
+                    console.error(error);
+                }
+
+                // 清空文件选择
+                event.target.value = '';
+            };
+
+            reader.readAsText(file);
+        }
+
+        // 获取文件图标
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const icons = {
+                'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🖼️',
+                'doc': '📄', 'docx': '📄',
+                'mp4': '🎬', 'avi': '🎬', 'mov': '🎬', 'wmv': '🎬'
+            };
+            return icons[ext] || '📎';
+        }
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // 下载附件
+        function downloadAttachment(data, filename) {
+            const a = document.createElement('a');
+            a.href = data;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // 选择本地文件进行预览
+        function selectLocalFileForPreview(logIndex, attIndex) {
+            const logs = loadLogs();
+            const log = logs[logIndex];
+            if (!log || !log.attachments || !log.attachments[attIndex]) {
+                console.error('附件引用不存在');
+                return;
+            }
+
+            const att = log.attachments[attIndex];
+
+            // 创建文件选择输入框
+            const input = document.createElement('input');
+            input.type = 'file';
+
+            // 根据附件类型设置接受的文件类型
+            if (att.type) {
+                input.accept = att.type;
+            } else {
+                // 根据文件扩展名猜测类型
+                const ext = att.name.split('.').pop().toLowerCase();
+                if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+                    input.accept = 'image/*';
+                } else if (['mp4', 'avi', 'mov', 'wmv'].includes(ext)) {
+                    input.accept = 'video/*';
+                } else if (['doc', 'docx'].includes(ext)) {
+                    input.accept = '.doc,.docx';
+                } else {
+                    input.accept = '*/*';
+                }
+            }
+
+            // 文件选择后的处理
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) {
+                    return;
+                }
+
+                // 验证文件名是否匹配（可选，给用户提示）
+                if (file.name !== att.name) {
+                    const confirmLoad = confirm(`选择的文件名 "${file.name}" 与原文件名 "${att.name}" 不匹配。\n\n是否继续预览？`);
+                    if (!confirmLoad) {
+                        return;
+                    }
+                }
+
+                const isImage = file.type.startsWith('image/');
+                const isVideo = file.type.startsWith('video/');
+
+                if (isImage) {
+                    // 预览图片
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        showImagePreview(event.target.result, file.name);
+                    };
+                    reader.readAsDataURL(file);
+                } else if (isVideo) {
+                    // 预览视频
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        showVideoPreview(event.target.result, file.name, file.type);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    alert('该文件类型不支持预览，仅支持图片和视频预览。');
+                }
+            };
+
+            // 触发文件选择
+            input.click();
+        }
+
+        // 显示图片预览
+        function showImagePreview(dataUrl, filename) {
+            // 创建预览模态框
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.cssText = 'display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 1000;';
+
+            modal.innerHTML = `
+                <div style="position: relative; max-width: 90%; max-height: 90%; margin: 50px auto; text-align: center;">
+                    <span onclick="this.parentElement.parentElement.remove()" style="cursor: pointer; position: fixed; right: 30px; top: 30px; z-index: 1001; background: rgba(0,0,0,0.7); color: white; width: 40px; height: 40px; text-align: center; line-height: 40px; border-radius: 50%; font-size: 28px;">&times;</span>
+                    <img src="${dataUrl}" alt="${escapeHtml(filename)}" style="max-width: 100%; max-height: 85vh; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                    <div style="color: white; margin-top: 15px; font-size: 14px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 4px; display: inline-block;">
+                        ${escapeHtml(filename)} [本地文件]
+                    </div>
+                </div>
+            `;
+
+            // 点击背景关闭
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            };
+
+            document.body.appendChild(modal);
+        }
+
+        // 显示视频预览
+        function showVideoPreview(dataUrl, filename, mimeType) {
+            // 创建预览模态框
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.cssText = 'display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 1000;';
+
+            modal.innerHTML = `
+                <div style="position: relative; max-width: 90%; max-height: 90%; margin: 50px auto; text-align: center;">
+                    <span onclick="this.parentElement.parentElement.remove()" style="cursor: pointer; position: fixed; right: 30px; top: 30px; z-index: 1001; background: rgba(0,0,0,0.7); color: white; width: 40px; height: 40px; text-align: center; line-height: 40px; border-radius: 50%; font-size: 28px;">&times;</span>
+                    <video controls autoplay preload="metadata" style="max-width: 100%; max-height: 85vh; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                        <source src="${dataUrl}" type="${mimeType}">
+                        您的浏览器不支持视频播放
+                    </video>
+                    <div style="color: white; margin-top: 15px; font-size: 14px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 4px; display: inline-block;">
+                        ${escapeHtml(filename)} [本地文件]
+                    </div>
+                </div>
+            `;
+
+            // 点击背景关闭
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            };
+
+            document.body.appendChild(modal);
+        }
+    </script>
+</body>
+</html>
